@@ -452,7 +452,7 @@
       </div>
 
       <div class="form-group">
-        <label for="data-evento">Data do evento de intimação (à direita do n° do ev.))</label>
+        <label for="data-evento">Data do evento de intimação (à direita do n° do ev.)</label>
         <div class="date-input-wrapper">
           <input type="text" id="data-evento" class="date-text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric">
           <div class="calendar-btn" title="Selecionar data">
@@ -526,7 +526,7 @@
           <span id="result-date" class="result-value">--/--/----</span>
         </div>
         <div class="holidays-section">
-          <div class="holidays-title">Feriados e dias não úteis no intervalo:</div>
+          <div class="holidays-title">Dias não úteis no intervalo:</div>
           <ul id="holidays-list" class="holidays-list"></ul>
         </div>
       </div>
@@ -591,6 +591,8 @@
 
     // Dias não úteis específicos solicitados pelo tribunal
     const DESCRICAO_SUSPENSAO_TJTO = 'Suspensão de Prazos em razão do Incidente Cibernético - TJTO';
+    const DESCRICAO_SUSPENSAO_CNJ = 'Suspensão de Prazos em razão da Instabilidade da Microsoft (CNJ)';
+    const DESCRICAO_SUSPENSAO_EPROC = 'Suspensão de Prazos em razão de Inconsistência no E-proc';
 
     const DIAS_ESPECIFICOS_NAO_UTEIS = new Map([
       ['2026-10-20', DESCRICAO_SUSPENSAO_TJTO],
@@ -601,7 +603,12 @@
       ['2026-10-27', DESCRICAO_SUSPENSAO_TJTO],
       ['2026-10-28', DESCRICAO_SUSPENSAO_TJTO],
       ['2026-10-29', DESCRICAO_SUSPENSAO_TJTO],
-      ['2026-11-03', DESCRICAO_SUSPENSAO_TJTO]
+      ['2026-11-03', DESCRICAO_SUSPENSAO_TJTO],
+      ['2026-11-12', DESCRICAO_SUSPENSAO_CNJ],
+      ['2026-11-13', DESCRICAO_SUSPENSAO_CNJ],
+      ['2026-11-16', DESCRICAO_SUSPENSAO_EPROC],
+      ['2026-11-17', DESCRICAO_SUSPENSAO_EPROC]
+      
     ]);
 
     // Feriados Nacionais (Fixos) e Estaduais do Tocantins (Fixos) - formato MM-DD
