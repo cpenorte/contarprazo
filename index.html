@@ -698,18 +698,7 @@
 
       <div class="form-group">
         <label for="ce-evento-intimacao">Evento da Intimação</label>
-        <div class="date-input-wrapper">
-          <input type="text" id="ce-evento-intimacao" class="date-text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric">
-          <div class="calendar-btn" title="Selecionar data">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            <input type="date" class="native-date-picker" data-target="ce-evento-intimacao" aria-label="Selecionar data do Evento da Intimação">
-          </div>
-        </div>
+        <input type="text" id="ce-evento-intimacao" class="text-input-bar" placeholder="Ex.: 65">
       </div>
 
       <div class="form-group">
@@ -1242,7 +1231,7 @@
       const eventoIntimacao = eventoIntimacaoAtual || ultimoCalculoCumprimento.eventoIntimacao || '(EVENTO DA INTIMAÇÃO)';
       const prazoPagamento = prazoPagamentoAtual || ultimoCalculoCumprimento.prazoPagamento;
 
-      const textoCertidao = `Certifico que, em cumprimento ao Despacho/Decisão do ev. ${numeroEvento}, o executado foi regularmente intimado no ev. ${eventoIntimacao}, de modo que o prazo de ${prazoPagamento} dias para efetuar o pagamento do débito teve como termo inicial a data de ${ultimoCalculoCumprimento.dataInicial} e como termo final a data de ${ultimoCalculoCumprimento.dataFinal}; independentemente de nova intimação, o prazo para Impugnação ao Cumprimento de Sentença/Embargos à Execução teve como termo inicial a data de ${ultimoCalculoCumprimento.diaSeguinteDataFinal} e como termo final a data de ${ultimoCalculoCumprimento.dataFinalAlgoritmo}. Dias não úteis considerados na contagem do prazo (exceto sábado e domingo): ${ultimoCalculoCumprimento.feriadosTexto}. Araguaína/TO, data certificada pelo sistema.`;
+      const textoCertidao = `Certifico que, em cumprimento ao Despacho/Decisão do ev. ${numeroEvento}, o executado foi intimado eletronicamente para efetuar o pagamento do débito no ev. ${eventoIntimacao}, de modo que o termo inicial do prazo de ${prazoPagamento} dias, após a publicação do edital de intimação no Diário de Justiça Eletrônico Nacional (DJEN), teve como termo inicial a data de ${ultimoCalculoCumprimento.dataInicial} e como termo final a data de ${ultimoCalculoCumprimento.dataFinal}; independentemente de nova intimação, o prazo para Impugnação ao Cumprimento de Sentença/Embargos à Execução teve como termo inicial a data de ${ultimoCalculoCumprimento.diaSeguinteDataFinal} e como termo final a data de ${ultimoCalculoCumprimento.dataFinalAlgoritmo}. Dias não úteis considerados na contagem do prazo (exceto sábados e domingos): ${ultimoCalculoCumprimento.feriadosTexto}. Araguaína/TO, data certificada pelo sistema.`;
 
       const certidaoTextarea = document.getElementById('ce-certidao-texto');
       certidaoTextarea.value = textoCertidao;
