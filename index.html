@@ -519,6 +519,10 @@
       box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.12);
     }
 
+    .certidao-text-area.certidao-cumprimento-area {
+      min-height: 210px;
+    }
+
     .certidao-text-area:focus {
       box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.5);
     }
@@ -683,11 +687,90 @@
         <textarea id="certidao-texto" class="certidao-text-area" spellcheck="false"></textarea>
       </div>
     </main>
+
+    <section class="calculator-container" aria-label="Cumprimento/Execução">
+      <h1>Cumprimento/Execução</h1>
+
+      <div class="form-group">
+        <label for="ce-evento-despacho">Evento do Despacho</label>
+        <input type="text" id="ce-evento-despacho" class="text-input-bar" placeholder="Ex.: 58">
+      </div>
+
+      <div class="form-group">
+        <label for="ce-evento-intimacao">Evento da Intimação</label>
+        <div class="date-input-wrapper">
+          <input type="text" id="ce-evento-intimacao" class="date-text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric">
+          <div class="calendar-btn" title="Selecionar data">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <input type="date" class="native-date-picker" data-target="ce-evento-intimacao" aria-label="Selecionar data do Evento da Intimação">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="ce-data-publicacao-djen">Data da Publicação no DJEN</label>
+        <div class="date-input-wrapper">
+          <input type="text" id="ce-data-publicacao-djen" class="date-text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric">
+          <div class="calendar-btn" title="Selecionar data">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <input type="date" class="native-date-picker" data-target="ce-data-publicacao-djen" aria-label="Selecionar Data da Publicação no DJEN">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="ce-prazo-pagamento">Prazo para pagamento</label>
+        <select id="ce-prazo-pagamento">
+          <option value="03">03 dias</option>
+          <option value="15" selected>15 dias</option>
+        </select>
+      </div>
+
+      <button type="button" id="ce-btn-calcular" class="btn-primary">Calcular Prazo</button>
+
+      <div id="ce-error-msg" class="error-msg">Por favor, informe uma Data da Publicação no DJEN válida (DD/MM/AAAA).</div>
+
+      <div id="ce-result-box" class="result-box">
+        <div class="result-row">
+          <span class="result-label">Data Inicial:</span>
+          <span id="ce-result-start-date" class="result-value">--/--/----</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Data Final:</span>
+          <span id="ce-result-date" class="result-value">--/--/----</span>
+        </div>
+        <div class="holidays-section">
+          <div class="holidays-title">Dias não úteis no intervalo (exceto sábado e domingo):</div>
+          <ul id="ce-holidays-list" class="holidays-list"></ul>
+        </div>
+      </div>
+
+      <button type="button" id="ce-btn-gerar-certidao" class="btn-primary btn-certidao">Gerar Certidão</button>
+
+      <div id="ce-certidao-box" class="certidao-box">
+        <div class="certidao-header">
+          <span class="certidao-title">Certidão Gerada</span>
+          <button type="button" id="ce-btn-copiar" class="btn-copiar">Copiar</button>
+        </div>
+        <textarea id="ce-certidao-texto" class="certidao-text-area certidao-cumprimento-area" spellcheck="false"></textarea>
+      </div>
+    </section>
   </div>
 
   <script>
     // Estado do último cálculo realizado
     let ultimoCalculo = null;
+    let ultimoCalculoCumprimento = null;
 
     // Inicializa os seletores nativos de calendário com a data atual (mês/dia atual selecionado ao abrir)
     const today = new Date();
@@ -862,6 +945,44 @@
       return getMotivoNaoUtil(date) === null;
     }
 
+    // Calcula um prazo em dias úteis a partir do dia útil seguinte a uma data base (inclusive)
+    function calcularPrazoUtilAPartirDe(dataBaseDate, prazoDias) {
+      let cursor = new Date(dataBaseDate);
+      const feriadosMap = new Map();
+
+      // Avança até o primeiro dia útil seguinte à data base (Data Inicial)
+      do {
+        cursor.setDate(cursor.getDate() + 1);
+        const motivo = getMotivoNaoUtil(cursor);
+        if (motivo) {
+          feriadosMap.set(formatISO(cursor), `${formatBR(cursor)} — ${motivo}`);
+        }
+      } while (!isDiaUtil(cursor));
+
+      const dataInicial = new Date(cursor);
+      let diasUteisContados = 1; // A própria Data Inicial já conta como o 1º dia útil do prazo
+
+      // Continua avançando até completar o número de dias úteis do prazo
+      while (diasUteisContados < prazoDias) {
+        cursor.setDate(cursor.getDate() + 1);
+        const motivo = getMotivoNaoUtil(cursor);
+        if (motivo) {
+          feriadosMap.set(formatISO(cursor), `${formatBR(cursor)} — ${motivo}`);
+        }
+        if (isDiaUtil(cursor)) {
+          diasUteisContados++;
+        }
+      }
+
+      const dataFinal = new Date(cursor);
+
+      return {
+        dataInicial,
+        dataFinal,
+        feriadosMap
+      };
+    }
+
     const ROTULO_DIAS_NAO_UTEIS = 'Dias não úteis considerados na contagem do prazo (exceto sábado e domingo):';
 
     function renderizarCertidaoSelecionada() {
@@ -939,34 +1060,9 @@
 
       errorMsg.classList.remove('visible');
 
-      let cursor = new Date(dataPublicacao);
-      const feriadosEncontrados = [];
+      const { dataInicial, dataFinal: dataFinalDate, feriadosMap } = calcularPrazoUtilAPartirDe(dataPublicacao, prazoDias);
+      const feriadosEncontrados = Array.from(feriadosMap.values());
 
-      // Avança até o primeiro dia útil seguinte à publicação (Data Inicial)
-      do {
-        cursor.setDate(cursor.getDate() + 1);
-        const motivo = getMotivoNaoUtil(cursor);
-        if (motivo) {
-          feriadosEncontrados.push(`${formatBR(cursor)} — ${motivo}`);
-        }
-      } while (!isDiaUtil(cursor));
-
-      const dataInicial = new Date(cursor);
-      let diasUteisContados = 1; // A própria Data Inicial já conta como o 1º dia útil do prazo
-
-      // Continua avançando até completar o número de dias úteis do prazo
-      while (diasUteisContados < prazoDias) {
-        cursor.setDate(cursor.getDate() + 1);
-        const motivo = getMotivoNaoUtil(cursor);
-        if (motivo) {
-          feriadosEncontrados.push(`${formatBR(cursor)} — ${motivo}`);
-        }
-        if (isDiaUtil(cursor)) {
-          diasUteisContados++;
-        }
-      }
-
-      const dataFinalDate = new Date(cursor);
       const dataInicialFormatada = formatBR(dataInicial);
       const dataFinalFormatada = formatBR(dataFinalDate);
       const diaSeguinteDataFinalFormatada = getDiaSeguinteDataFinal(dataFinalDate);
@@ -1018,9 +1114,9 @@
       renderizarCertidaoSelecionada();
     });
 
-    document.getElementById('btn-copiar').addEventListener('click', async () => {
-      const certidaoTextarea = document.getElementById('certidao-texto');
-      const btnCopiar = document.getElementById('btn-copiar');
+    async function copiarTextoElemento(textareaId, botaoId) {
+      const certidaoTextarea = document.getElementById(textareaId);
+      const btnCopiar = document.getElementById(botaoId);
       const texto = certidaoTextarea.value;
 
       if (!texto) return;
@@ -1045,6 +1141,121 @@
           btnCopiar.textContent = 'Copiar';
         }, 2000);
       }
+    }
+
+    document.getElementById('btn-copiar').addEventListener('click', () => {
+      copiarTextoElemento('certidao-texto', 'btn-copiar');
+    });
+
+    // Lógica da calculadora Cumprimento/Execução
+    document.getElementById('ce-btn-calcular').addEventListener('click', () => {
+      const eventoDespachoInput = document.getElementById('ce-evento-despacho').value.trim();
+      const eventoIntimacaoInput = document.getElementById('ce-evento-intimacao').value.trim();
+      const pubDjenInput = document.getElementById('ce-data-publicacao-djen').value.trim();
+      const prazoPagamento = document.getElementById('ce-prazo-pagamento').value;
+      const prazoPagamentoDias = parseInt(prazoPagamento, 10);
+
+      const errorMsg = document.getElementById('ce-error-msg');
+      const resultBox = document.getElementById('ce-result-box');
+      const resultStartDate = document.getElementById('ce-result-start-date');
+      const resultDate = document.getElementById('ce-result-date');
+      const holidaysList = document.getElementById('ce-holidays-list');
+      const btnGerarCertidao = document.getElementById('ce-btn-gerar-certidao');
+      const certidaoBox = document.getElementById('ce-certidao-box');
+
+      const dataPublicacaoDjen = parseBRDate(pubDjenInput);
+
+      if (!dataPublicacaoDjen) {
+        errorMsg.classList.add('visible');
+        resultBox.classList.remove('visible');
+        btnGerarCertidao.classList.remove('visible');
+        certidaoBox.classList.remove('visible');
+        ultimoCalculoCumprimento = null;
+        return;
+      }
+
+      errorMsg.classList.remove('visible');
+
+      // 1º prazo: prazo para pagamento (03 ou 15 dias úteis) a partir do dia útil seguinte à publicação no DJEN
+      const primeiroPrazo = calcularPrazoUtilAPartirDe(dataPublicacaoDjen, prazoPagamentoDias);
+
+      // 2º prazo: sempre 15 dias úteis, iniciando no dia útil imediatamente seguinte ao último dia do 1º prazo
+      const segundoPrazo = calcularPrazoUtilAPartirDe(primeiroPrazo.dataFinal, 15);
+
+      // Combina dias não úteis dos dois prazos (03 + 15 ou 15 + 15), ordenados cronologicamente e sem duplicar
+      const feriadosCombinadosMap = new Map([
+        ...primeiroPrazo.feriadosMap.entries(),
+        ...segundoPrazo.feriadosMap.entries()
+      ]);
+
+      const feriadosCombinadosLista = Array.from(feriadosCombinadosMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([, descricao]) => descricao);
+
+      const dataInicialFormatada = formatBR(primeiroPrazo.dataInicial);
+      const dataFinalFormatada = formatBR(primeiroPrazo.dataFinal);
+      const diaSeguinteDataFinalFormatada = formatBR(segundoPrazo.dataInicial);
+      const dataFinalAlgoritmoFormatada = formatBR(segundoPrazo.dataFinal);
+
+      resultStartDate.textContent = dataInicialFormatada;
+      resultDate.textContent = dataFinalFormatada;
+
+      holidaysList.innerHTML = '';
+      if (feriadosCombinadosLista.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'holidays-empty';
+        li.textContent = 'Nenhum feriado ou dia não útil específico encontrado no intervalo.';
+        holidaysList.appendChild(li);
+      } else {
+        feriadosCombinadosLista.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          holidaysList.appendChild(li);
+        });
+      }
+
+      resultBox.classList.add('visible');
+      btnGerarCertidao.classList.add('visible');
+
+      ultimoCalculoCumprimento = {
+        eventoDespacho: eventoDespachoInput,
+        eventoIntimacao: eventoIntimacaoInput,
+        prazoPagamento,
+        dataInicial: dataInicialFormatada,
+        dataFinal: dataFinalFormatada,
+        diaSeguinteDataFinal: diaSeguinteDataFinalFormatada,
+        dataFinalAlgoritmo: dataFinalAlgoritmoFormatada,
+        feriadosTexto: feriadosCombinadosLista.length > 0
+          ? feriadosCombinadosLista.join('; ')
+          : 'não houve feriados nem dias não úteis no período'
+      };
+    });
+
+    document.getElementById('ce-btn-gerar-certidao').addEventListener('click', () => {
+      if (!ultimoCalculoCumprimento) return;
+
+      const eventoDespachoAtual = document.getElementById('ce-evento-despacho').value.trim();
+      const eventoIntimacaoAtual = document.getElementById('ce-evento-intimacao').value.trim();
+      const prazoPagamentoAtual = document.getElementById('ce-prazo-pagamento').value;
+
+      const numeroEvento = eventoDespachoAtual || ultimoCalculoCumprimento.eventoDespacho || '(NÚMERO DO EVENTO)';
+      const eventoIntimacao = eventoIntimacaoAtual || ultimoCalculoCumprimento.eventoIntimacao || '(EVENTO DA INTIMAÇÃO)';
+      const prazoPagamento = prazoPagamentoAtual || ultimoCalculoCumprimento.prazoPagamento;
+
+      const textoCertidao = `Certifico que, em cumprimento ao Despacho/Decisão do ev. ${numeroEvento}, o executado foi regularmente intimado para pagamento no ev. ${eventoIntimacao}, de modo que o prazo de ${prazoPagamento} dias teve como termo inicial a data de ${ultimoCalculoCumprimento.dataInicial} e como termo final a data de ${ultimoCalculoCumprimento.dataFinal}; independentemente de nova intimação, o prazo para Impugnação ao Cumprimento de Sentença/Embargos à Execução teve como termo inicial a data de ${ultimoCalculoCumprimento.diaSeguinteDataFinal} e como termo final a data de ${ultimoCalculoCumprimento.dataFinalAlgoritmo}. Dias não úteis considerados na contagem do prazo (exceto sábado e domingo): ${ultimoCalculoCumprimento.feriadosTexto}. Araguaína/TO, data certificada pelo sistema.`;
+
+      const certidaoTextarea = document.getElementById('ce-certidao-texto');
+      certidaoTextarea.value = textoCertidao;
+
+      const certidaoBox = document.getElementById('ce-certidao-box');
+      certidaoBox.classList.add('visible');
+
+      const btnCopiar = document.getElementById('ce-btn-copiar');
+      btnCopiar.textContent = 'Copiar';
+    });
+
+    document.getElementById('ce-btn-copiar').addEventListener('click', () => {
+      copiarTextoElemento('ce-certidao-texto', 'ce-btn-copiar');
     });
   </script>
 </body>
