@@ -879,7 +879,7 @@
 
       if (tipoCertidao === 'transito-julgado') {
         const paragrafo1 = `Certifico que o trânsito em julgado da sentença proferida no evento ${eventoDespachoFinal} operou-se em ${diaSeguinteDataFinal}.`;
-        const paragrafo2 = `Destarte, transitada em julgado a decisão de mérito, considerar-se-ão deduzidas e repelidas todas as alegações e as defesas que a parte poderia opor tanto ao acolhimento quanto à rejeição do pedido, nos termos do art. 508 CPC.`;
+        const paragrafo2 = `Transitada em julgado a decisão de mérito, considerar-se-ão deduzidas e repelidas todas as alegações e as defesas que a parte poderia opor tanto ao acolhimento quanto à rejeição do pedido, nos termos do art. 508 da Lei nº 13.105/2015 (Código de Processo Civil)`;
         const feriadosTransito = ultimoCalculo.feriadosLista && ultimoCalculo.feriadosLista.length > 0
           ? ultimoCalculo.feriadosLista.join('; ')
           : 'Não houve feriados nem outras suspensões de prazo no período';
@@ -894,7 +894,7 @@
 
         const p3 = `Quanto aos prazos que estavam em andamento, já publicados no Diário de Justiça Eletrônico (DJEN), em virtude das inconsistências técnicas da contagem de prazos do sistema E-proc, serão regularmente certificados pelos servidores.`;
 
-        const p4 = `Certifico, por fim, que a intimação do evento ${numEventoAtual} tem como termo inicial a data de ${ultimoCalculo.termoInicial} e como termo final a data de ${ultimoCalculo.termoFinal}, e que a contagem do referido prazo considerou as seguintes suspensões de prazo: ${ultimoCalculo.feriados}.`;
+        const p4 = `Certifico, por fim, que a intimação do evento ${numEventoAtual} tem como termo inicial a data de ${ultimoCalculo.termoInicial} e como termo final a data de ${ultimoCalculo.termoFinal}, e que a contagem do referido prazo considerou os seguintes dias não úteis (exceto sábado e domingo): ${ultimoCalculo.feriados}.`;
 
         const p5 = `Araguaína/TO, data certificada pelo sistema.`;
 
